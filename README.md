@@ -1,319 +1,150 @@
-# ⚖️ Case Grinder
+# Case Grinder
 
-An AI-powered legal case digest generator focused on fast, structured outputs from raw case documents (PDF or text). Built as a simple MVP to transform lengthy legal decisions into clear, digestible summaries.
+An AI-powered legal case digest generator focused on fast, structured outputs from raw case documents.
 
 ---
 
-## 🧠 Overview
+## Overview
 
 **Case Grinder** allows users to:
 
-* Upload a PDF of a legal case OR paste raw text
-* Automatically extract and clean the content
-* Generate a structured legal digest using AI
+- Upload a PDF of a legal case
+- Extract and clean text automatically
+- Generate structured legal digests using AI
 
-### Output includes:
+Current digest output includes:
 
-* Facts
-* Issues
-* Ruling
-* Ratio Decidendi
-* Summary
+- Standard and Detailed versions
+- Title
+- Case Number
+- Decision Date
+- Abstract
+- Facts
+- Issues
+- Ruling
+- Ratio
+- Summary
 
 ---
 
-## 🚀 Tech Stack
+## Tech Stack
 
 ### Frontend
 
-* Next.js
-* shadcn/ui
+- Next.js
+- TypeScript
 
 ### Backend
 
-* FastAPI
-* pdfminer.six (PDF parsing)
+- FastAPI
+- pdfminer.six
 
 ### AI
 
-* OpenAI API (or compatible LLM)
+- Groq API (`llama-3.1-8b-instant`)
 
-### Storage (MVP)
+### Deployment
 
-* In-memory / SQLite (upgrade later)
-
----
-
-## 🧱 Architecture
-
-```
-Client (Next.js)
-   ↓
-FastAPI Backend (rate-limited)
-   ↓
-PDF/Text Processing
-   ↓
-AI Processing Pipeline
-   ↓
-Structured Digest Output
-```
+- Frontend: Vercel
+- Backend: Render (Docker)
 
 ---
 
-## 📦 API Endpoints
+## Project Structure
 
-### 1. Generate Digest
-
-**POST** `/digest`
-
-Accepts:
-
-* `multipart/form-data` (PDF upload)
-* OR `text` input
-
-#### Request (PDF)
-
-```
-file: <uploaded_pdf>
-```
-
-#### Request (Text)
-
-```json
-{
-  "text": "Full case text..."
-}
-```
-
-#### Response
-
-```json
-{
-  "id": "case_123",
-  "status": "processing"
-}
+```text
+Case-Grinder/
+├── backend/
+│   ├── index.py
+│   ├── requirements.txt
+│   ├── Dockerfile
+│   ├── service/
+│   │   └── generate_digest.py
+│   └── utils/
+│       ├── extract_text_from_pdf.py
+│       ├── clean_text.py
+│       └── validate_digest.py
+└── frontend/
+    └── case-grinder/
+        ├── app/
+        │   ├── layout.tsx
+        │   └── page.tsx
+        └── components/
 ```
 
 ---
 
-### 2. Get Digest Result
-
-**GET** `/digest/:id`
-
-#### Response
-
-```json
-{
-  "status": "done",
-  "data": {
-    "facts": "...",
-    "issues": "...",
-    "ruling": "...",
-    "ratio": "...",
-    "summary": "..."
-  }
-}
-```
-
----
-
-## ⚙️ Processing Pipeline
-
-```
-PDF Upload / Text Input
-        ↓
-Extract Text (pdfminer)
-        ↓
-Clean Text
-        ↓
-Chunk Text
-        ↓
-AI Extraction (per chunk)
-        ↓
-Merge Results
-        ↓
-Final Structured Digest
-```
-
----
-
-## 📄 PDF Extraction
-
-Install dependency:
-
-```bash
-pip install pdfminer.six
-```
-
-Example:
-
-```python
-from io import BytesIO
-from pdfminer.high_level import extract_text
-
-def extract_pdf_text(file_bytes: bytes) -> str:
-    return extract_text(BytesIO(file_bytes))
-```
-
----
-
-## ✂️ Text Chunking
-
-```python
-def chunk_text(text, size=2000):
-    return [text[i:i+size] for i in range(0, len(text), size)]
-```
-
----
-
-## 🧹 Text Cleaning
-
-```python
-import re
-
-def clean_text(text):
-    text = re.sub(r'\s+', ' ', text)
-    return text.strip()
-```
-
----
-
-## 🔐 Rate Limiting (No Auth MVP)
-
-Implemented using IP-based limiting.
-
-Example:
-
-```python
-@limiter.limit("2/minute")
-```
-
-Purpose:
-
-* Prevent abuse
-* Control AI costs
-* Ensure system stability
-
----
-
-## 🧠 AI Output Format
-
-All responses are structured as:
-
-```json
-{
-  "facts": "",
-  "issues": "",
-  "ruling": "",
-  "ratio": "",
-  "summary": ""
-}
-```
-
----
-
-## ⚡ Background Processing (Recommended)
-
-Use FastAPI BackgroundTasks:
-
-```python
-from fastapi import BackgroundTasks
-
-@router.post("/digest")
-async def generate_digest(background_tasks: BackgroundTasks, file: UploadFile):
-    case_id = create_case()
-    background_tasks.add_task(process_pdf, case_id, file)
-    return {"id": case_id, "status": "processing"}
-```
-
----
-
-## 📏 Constraints (MVP Safety)
-
-* Max file size: **5MB**
-* Rate limit: **2 requests/minute per IP**
-* No authentication (yet)
-
----
-
-## 🧩 Project Structure
-
-```
-app/
- ├── main.py
- ├── routes/
- │    └── digest.py
- ├── services/
- │    ├── ai.py
- │    └── pdf.py
- ├── utils/
- │    ├── chunk.py
- │    └── clean.py
- ├── core/
- │    └── rate_limit.py
-```
-
----
-
-## 🎯 MVP Roadmap
+## MVP Roadmap
 
 ### Phase 1
 
-* Text input → AI digest
-* Basic UI
+- Upload and process PDF cases
+- Generate structured digest output
 
 ### Phase 2
 
-* PDF upload
-* Chunking + structured output
+- Improve prompt quality and output consistency
+- Better error handling and validation
 
 ### Phase 3
 
-* Background processing
-* Improved prompts
+- Improve UI readability and filtering
+- Add result export options
 
 ### Phase 4
 
-* Queue system (Redis)
-* File storage (S3)
-
-### Phase 5
-
-* Authentication
-* Search & bookmarks
+- Add authentication and saved digests
+- Add search and bookmarks
 
 ---
 
-## 🚨 Notes
+## Contributing
 
-* Focus on **accuracy over features**
-* Legal text is long → chunking is essential
-* PDF parsing is imperfect → always clean text
-* AI cost grows fast → enforce limits early
+Contributions are welcome.
 
----
+Simple flow:
 
-## 💡 Future Improvements
+1. Fork the repository
+2. Create your branch from `dev`
+3. Make your changes
+4. Open a Pull Request to `dev`
 
-* Citation extraction
-* Case law linking
-* Search engine
-* Export to PDF
-* User accounts
+Branch naming:
 
----
+- `fix/<short-description>` for bug fixes
+- `add/<short-description>` for additions
 
-## 🧪 Quick Start (Backend)
+Example:
 
 ```bash
-pip install fastapi uvicorn pdfminer.six slowapi
-uvicorn app.main:app --reload
+git checkout dev
+git pull origin dev
+git checkout -b add/case-filter-ui
 ```
 
 ---
 
-## ✨ Summary
+## Issues
 
-**Case Grinder** is a lightweight AI tool designed to turn complex legal cases into structured, readable digests with minimal friction—no login required, just upload and generate.
+If you find a bug, open an issue and include:
+
+- What happened
+- Expected behavior
+- Steps to reproduce
+- Screenshots/logs (if available)
+- Environment details (OS, browser, Python/Node versions)
+
+---
+
+## Suggestions
+
+For ideas or feature requests, open an issue and label it as a suggestion.
+
+Please include:
+
+- Problem you are trying to solve
+- Proposed change
+- Why it helps users/developers
+- Optional mockups or examples
 
 ---
