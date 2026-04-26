@@ -84,5 +84,4 @@ async def search_case_details(payload: CaseDetailRequest):
 
     return {
         "data": detailed_text,
-        "feeded_text": details
     }
