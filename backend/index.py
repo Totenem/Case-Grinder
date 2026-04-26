@@ -1,11 +1,14 @@
 import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.concurrency import run_in_threadpool
 from dotenv import load_dotenv
 from fastapi import UploadFile, File
-from service.generate_digest import generate_digest
+from service.generate_digest import generate_digest_with_pdf, generate_digest_with_pure_text
 from utils.extract_text_from_pdf import extract_text_from_pdf
 from utils.clean_text import clean_text, chunk_text
+from service.scraper.ph_scraper import fetch_case_detail, search_cases
+from service.scraper.models.data_model import CaseDetailRequest
 
 load_dotenv()
 
@@ -57,5 +60,29 @@ async def digest (file: UploadFile = File(...)):
     #chunk text
     chunks = chunk_text(cleaned_text)
     #generate digest
-    digest = await generate_digest(chunks)
+    digest = await generate_digest_with_pdf(chunks)
     return {"digest": digest}
+
+@app.get("/search/{search}")
+async def search_case(search: str):
+    
+    # search for cases
+    results = search_cases(search, page=1, rows=10)
+
+    return{
+        "data": results,
+    }
+
+@app.post("/search/results")
+async def search_case_details(payload: CaseDetailRequest):
+
+    #get the details
+    details = await run_in_threadpool(fetch_case_detail, payload.source_url)
+
+    #generate the digest
+    detailed_text = await generate_digest_with_pure_text(details)
+
+    return {
+        "data": detailed_text,
+        "feeded_text": details
+    }
