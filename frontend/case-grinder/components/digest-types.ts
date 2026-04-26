@@ -1,3 +1,16 @@
+export type SearchResult = {
+  id: number | null;
+  docket_number: string | null;
+  decision_date: string | null;
+  title: string | null;
+  reference: string | null;
+  source_url: string | null;
+  pdf_available: boolean;
+  pdf_path: string | null;
+  ponente: string | null;
+  subject: string | null;
+};
+
 export type DigestSection = {
   title: string;
   case_number: string;
