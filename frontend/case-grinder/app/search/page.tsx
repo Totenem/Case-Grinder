@@ -23,6 +23,9 @@ export default function SearchPage() {
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
+  const [totalResults, setTotalResults] = useState(0);
 
   const [digest, setDigest] = useState<DigestPayload | null>(null);
   const [digestError, setDigestError] = useState("");
@@ -37,7 +40,7 @@ export default function SearchPage() {
 
   const hasDigestContent = digest !== null || !!digestError || generatingUrl !== null;
 
-  const onSearch = async () => {
+  const fetchResults = async (page: number) => {
     const trimmed = query.trim();
     if (!trimmed) return;
 
@@ -47,22 +50,39 @@ export default function SearchPage() {
     setDigest(null);
     setDigestError("");
     setHasSearched(true);
-    setActivePanel("results");
 
     try {
       const response = await fetch(
-        `${API_BASE_URL}/search/${encodeURIComponent(trimmed)}`
+        `${API_BASE_URL}/search/${encodeURIComponent(trimmed)}?page=${page}`
       );
       if (!response.ok) throw new Error("Search request failed.");
       const data = (await response.json()) as {
-        data: { items: SearchResult[]; total: number };
+        data: {
+          items: SearchResult[];
+          total: number;
+          current_page: number;
+          last_page: number;
+        };
       };
       setResults(data.data?.items ?? []);
+      setCurrentPage(data.data?.current_page ?? page);
+      setLastPage(data.data?.last_page ?? 1);
+      setTotalResults(data.data?.total ?? 0);
     } catch (err) {
       setSearchError(err instanceof Error ? err.message : "Search failed.");
     } finally {
       setSearchLoading(false);
     }
+  };
+
+  const onSearch = async () => {
+    setActivePanel("results");
+    setCurrentPage(1);
+    await fetchResults(1);
+  };
+
+  const onPageChange = (newPage: number) => {
+    fetchResults(newPage);
   };
 
   const onGenerate = async (sourceUrl: string) => {
@@ -99,11 +119,11 @@ export default function SearchPage() {
           {searchLoading
             ? "Searching..."
             : results.length > 0
-            ? `${results.length} Result${results.length !== 1 ? "s" : ""}`
+            ? `Page ${currentPage} of ${lastPage} · ${totalResults} total`
             : "Search Results"}
         </h2>
       </div>
-      <div className="divide-y divide-[#f0e8ff] overflow-y-auto max-h-[calc(100vh-300px)]">
+      <div className="divide-y divide-[#f0e8ff] overflow-y-auto max-h-[calc(100vh-360px)]">
         {searchLoading ? (
           <div className="flex justify-center py-10">
             <ClipLoader color="#7c3aed" />
@@ -147,6 +167,29 @@ export default function SearchPage() {
           ))
         )}
       </div>
+      {!searchLoading && lastPage > 1 && (
+        <div className="border-t border-[#f0e8ff] flex items-center justify-between px-5 py-3">
+          <button
+            type="button"
+            onClick={() => onPageChange(currentPage - 1)}
+            disabled={currentPage <= 1}
+            className="rounded-md border border-[#d9c2ff] px-3 py-1.5 text-xs font-medium text-[#7c3aed] transition hover:bg-[#f5eeff] disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            ← Prev
+          </button>
+          <span className="text-xs text-[#7f6a9a]">
+            {currentPage} / {lastPage}
+          </span>
+          <button
+            type="button"
+            onClick={() => onPageChange(currentPage + 1)}
+            disabled={currentPage >= lastPage}
+            className="rounded-md border border-[#d9c2ff] px-3 py-1.5 text-xs font-medium text-[#7c3aed] transition hover:bg-[#f5eeff] disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Next →
+          </button>
+        </div>
+      )}
     </section>
   );
 
