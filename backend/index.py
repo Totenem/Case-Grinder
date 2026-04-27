@@ -64,12 +64,9 @@ async def digest (file: UploadFile = File(...)):
     return {"digest": digest}
 
 @app.get("/search/{search}")
-async def search_case(search: str):
-    
-    # search for cases
-    results = search_cases(search, page=1, rows=10)
-
-    return{
+async def search_case(search: str, page: int = 1, rows: int = 10):
+    results = search_cases(search, page=page, rows=rows)
+    return {
         "data": results,
     }
 
