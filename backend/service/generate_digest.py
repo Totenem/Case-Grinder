@@ -10,7 +10,7 @@ async def generate_digest_with_pdf(chunks):
     case_text = "\n\n".join(chunks) if isinstance(chunks, list) else str(chunks)
     groq = Groq(api_key=os.getenv("GROQ_API_KEY"))
     response = groq.chat.completions.create(
-        model="llama-3.1-8b-instant",
+        model="meta-llama/llama-4-scout-17b-16e-instruct",
         messages=[
             {
                 "role": "system",
@@ -76,7 +76,7 @@ async def generate_digest_with_pure_text(text):
 
     groq = Groq(api_key=os.getenv("GROQ_API_KEY"))
     response = groq.chat.completions.create(
-        model="llama-3.1-8b-instant",
+        model="meta-llama/llama-4-scout-17b-16e-instruct",
         messages=[
             {
                 "role": "system",

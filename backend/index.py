@@ -10,6 +10,7 @@ from utils.extract_text_from_docs import extract_text_from_docs
 from utils.clean_text import clean_text, chunk_text
 from service.scraper.ph_scraper import fetch_case_detail, search_cases
 from service.scraper.models.data_model import CaseDetailRequest
+import requests
 
 load_dotenv()
 
@@ -101,3 +102,18 @@ async def search_case_details(payload: CaseDetailRequest):
     return {
         "data": detailed_text,
     }
+
+# @app.get("/get/models")
+# async def get_models():
+
+#     api_key = os.environ.get("GROQ_API_KEY")
+#     url = "https://api.groq.com/openai/v1/models"
+
+#     headers = {
+#         "Authorization": f"Bearer {api_key}",
+#         "Content-Type": "application/json"
+#     }
+
+#     response = requests.get(url, headers=headers)
+
+#     return response.json()
