@@ -23,7 +23,7 @@ export function UploadPanel({
       <div className="grid gap-3 md:grid-cols-[1fr_auto]">
         <input
           type="file"
-          accept="application/pdf"
+          accept="application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
           disabled={loading}
           onChange={onFileChange}
           className="w-full cursor-pointer rounded-lg border border-[#d9c2ff] bg-white px-3 py-2 text-sm file:mr-4 file:rounded-md file:border-0 file:bg-[#f4edff] file:px-3 file:py-1.5 file:text-sm file:cursor-pointer"
