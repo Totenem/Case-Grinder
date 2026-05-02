@@ -1,9 +1,16 @@
 import os
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.concurrency import run_in_threadpool
 from dotenv import load_dotenv
 from fastapi import UploadFile, File, HTTPException
+
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+from utils.handler.limit_handler import rate_limit_handler
+
 from service.generate_digest import generate_digest_with_pdf, generate_digest_with_pure_text
 from utils.extract_text_from_pdf import extract_text_from_pdf
 from utils.extract_text_from_docs import extract_text_from_docs
@@ -15,6 +22,13 @@ import requests
 load_dotenv()
 
 app = FastAPI()
+
+limiter = Limiter(key_func=get_remote_address)
+
+# Add middleware
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
+app.add_middleware(SlowAPIMiddleware)
 
 cors_origins_env = os.getenv("CORS_ORIGINS", "")
 origins = []
@@ -52,6 +66,7 @@ def read_root():
     return {"Application": "Running"}
 
 @app.post("/digest")
+@limiter.limit("5/minute")
 async def digest(file: UploadFile = File(...)):
     ALLOWED_PDF_MIME = {
         "application/pdf"
@@ -84,6 +99,7 @@ async def digest(file: UploadFile = File(...)):
         return {"error": str(e)}
 
 @app.get("/search/{search}")
+@limiter.limit("5/minute")
 async def search_case(search: str, page: int = 1, rows: int = 10):
     results = search_cases(search, page=page, rows=rows)
     return {
@@ -91,6 +107,7 @@ async def search_case(search: str, page: int = 1, rows: int = 10):
     }
 
 @app.post("/search/results")
+@limiter.limit("5/minute")
 async def search_case_details(payload: CaseDetailRequest):
 
     #get the details
