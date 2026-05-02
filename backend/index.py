@@ -67,7 +67,7 @@ def read_root():
 
 @app.post("/digest")
 @limiter.limit("5/minute")
-async def digest(file: UploadFile = File(...)):
+async def digest(request: Request, file: UploadFile = File(...)):
     ALLOWED_PDF_MIME = {
         "application/pdf"
         }
@@ -100,7 +100,7 @@ async def digest(file: UploadFile = File(...)):
 
 @app.get("/search/{search}")
 @limiter.limit("5/minute")
-async def search_case(search: str, page: int = 1, rows: int = 10):
+async def search_case(request: Request, search: str, page: int = 1, rows: int = 10):
     results = search_cases(search, page=page, rows=rows)
     return {
         "data": results,
@@ -108,7 +108,7 @@ async def search_case(search: str, page: int = 1, rows: int = 10):
 
 @app.post("/search/results")
 @limiter.limit("5/minute")
-async def search_case_details(payload: CaseDetailRequest):
+async def search_case_details(request: Request, payload: CaseDetailRequest):
 
     #get the details
     details = await run_in_threadpool(fetch_case_detail, payload.source_url)
